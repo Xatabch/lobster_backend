@@ -38,7 +38,8 @@ from .models import User
 
 #     return JsonResponse({}, status=404)
 
-
+def test(request):
+    return JsonResponse({'ok': 'ok'}, status=200)
 
 class UserSignup(APIView):
     """
