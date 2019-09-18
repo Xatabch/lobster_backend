@@ -5,6 +5,7 @@ from django.contrib.auth import login
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import IsAuthenticated
 import json
 
 from .serializers import UserSerializer
@@ -41,6 +42,32 @@ from .models import User
 def test(request):
     return JsonResponse({'ok': 'ok'}, status=200)
 
+class Profile(APIView):
+    """
+    Information about profile
+    """
+    permission_classes = [IsAuthenticated]
+
+    def options(self, request):
+        return Response({}, status=status.HTTP_200_OK, headers={
+            'Access-Control-Allow-Origin': 'http://localhost:8001',
+            'Access-Control-Allow-Headers': 'Content-Type, X-CSRFToken',
+            'Access-Control-Allow-Credentials': 'true',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+        })
+
+    def get(self, request):
+        users = User.objects.all()
+
+        return Response({
+            "user": users[0].username
+        }, status=status.HTTP_200_OK, headers={
+                    'Access-Control-Allow-Origin': 'http://localhost:8001',
+                    'Access-Control-Allow-Credentials': 'true',
+                })
+
+
+
 class UserSignup(APIView):
     """
     Signup user
@@ -66,7 +93,7 @@ class UserSignup(APIView):
                     'Access-Control-Allow-Credentials': 'true',
                 })
 
-        return Response({"error": "error"}, status=status.HTTP_403_OK, headers={
+        return Response({"error": "error"}, status=status.HTTP_403_FORBIDDEN, headers={
                     'Access-Control-Allow-Origin': 'http://localhost:8001',
                     'Access-Control-Allow-Credentials': 'true',
                 })
