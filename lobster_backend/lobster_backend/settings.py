@@ -27,9 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'neiron.pythonanywhere.com',
-    'lobster.ivanmorozov.now.sh'
+    'lobster.ivanmorozov.now.sh',
+    'localhost'
 ]
-
 
 # Application definition
 
@@ -53,6 +53,7 @@ REST_FRAMEWORK = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -60,6 +61,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:8001',
+    'https://lobster.ivanmorozov.now.sh'
+]
+
+CORS_ALLOW_CREDENTIALS = True;
 SESSION_COOKIE_SAMESITE = None
 CSRF_COOKIE_SAMESITE = None
 
