@@ -4,8 +4,9 @@ from rest_framework import status
 from django.contrib.auth import login, logout, authenticate
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, RelationSerializer
-from .models import User, UserRelations
+from .serializers import UserSerializer, RelationSerializer, PostSerializer, PhotosSerializer
+from .models import User, UserRelations, Post
+import json
 
 def test(request):
     return JsonResponse({'ok': 'ok'}, status=200)
@@ -140,4 +141,53 @@ class UserRelation(APIView):
             return Response({}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class Posts(APIView):
+    """
+    Essence for processing posts
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        print(request.data.get('text'))
+        # text = json.loads(request.data.get('text'))
+        # list_key_value = [ v for k, v in text.items() ]
+        # print(list_key_value)
+
+        data = {
+            "text": request.data.get("text"),
+            "author_id": request.user.id
+        }
+
+        serializer = PostSerializer(data=data)
+        if serializer.is_valid():
+            post = serializer.save()
+            if post:
+                for item in request.data.items():
+                    if ('text' not in item[0]):
+                        photo_data = {
+                            "post_id": post.id,
+                            "img": item[1],
+                            "hash": item[0]
+                        }
+
+                        photoSerializer = PhotosSerializer(data=photo_data)
+                        if photoSerializer.is_valid():
+                            img = photoSerializer.save()
+
+                return Response({}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, page, offset, username=None):
+        start = (page - 1) * offset
+        end = start + offset
+
+        if(username == None):
+            posts = Post.objects.get_posts(request.user, start, end)
+        else:
+            posts = Post.objects.get_my_posts(username, start, end)
+
+        return Response(posts, status=status.HTTP_200_OK)
 

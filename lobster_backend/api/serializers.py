@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from .models import User, UserRelations
+from .models import User, UserRelations, Post, Photo
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -42,3 +42,26 @@ class RelationSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRelations
         fields = ('subscriber_id', 'target_username')
+
+
+class PostSerializer(serializers.ModelSerializer):
+    author_id = serializers.IntegerField()
+    text = serializers.CharField(max_length=120)
+
+    def create(self, validated_data):
+        post = Post.objects.create(**validated_data)
+
+        return post
+
+    class Meta:
+        model = Post
+        fields = ('author_id', 'text')
+
+class PhotosSerializer(serializers.ModelSerializer):
+    post_id = serializers.IntegerField()
+    img = serializers.ImageField()
+    hash = serializers.CharField(max_length=40)
+
+    class Meta:
+        model = Photo
+        fields = ('post_id', 'img', 'hash')
