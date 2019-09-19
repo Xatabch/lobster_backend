@@ -3,5 +3,9 @@ from . import views
 
 urlpatterns = [
     path("signup/", views.UserSignup.as_view(), name="user-signup"),
-    path("profile/", views.UserProfile.as_view(), name="user-profile")
+    path("signin/", views.UserSignin.as_view(), name="user-signin"),
+    path("profile/", views.MyProfile.as_view(), name="my-profile"),
+    path("profile/<username>/", views.UserProfile.as_view(), name="user-profile"),
+    path("logout/", views.UserLogout.as_view(), name="user-logout"),
+    path("follow/", views.UserRelation.as_view(), name="relations")
 ]
