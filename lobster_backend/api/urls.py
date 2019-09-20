@@ -10,5 +10,6 @@ urlpatterns = [
     path("follow/", views.UserRelation.as_view(), name="relations"),
     path("posts/", views.Posts.as_view(), name="posts"),
     path("posts/<int:page>/<int:offset>/", views.Posts.as_view(), name="posts"),
-    path("posts/<int:page>/<int:offset>/<username>/", views.Posts.as_view(), name="my-posts")
+    path("posts/<int:page>/<int:offset>/<username>/", views.Posts.as_view(), name="my-posts"),
+    path("test/", views.test, name="test")
 ]

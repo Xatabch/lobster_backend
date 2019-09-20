@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import UserSerializer, RelationSerializer, PostSerializer, PhotosSerializer
 from .models import User, UserRelations, Post
 import json
+from django.http import JsonResponse
 
 def test(request):
     return JsonResponse({'ok': 'ok'}, status=200)
