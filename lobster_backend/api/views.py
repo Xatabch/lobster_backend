@@ -18,10 +18,13 @@ class UserProfile(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, username):
-        user = User.objects.get_user_profile(username)
-        my_username = request.user
-        is_follow = UserRelations.objects.is_follow(my_username, username)
-        is_my_page = False
+        try:
+            user = User.objects.get_user_profile(username)
+            my_username = request.user
+            is_follow = UserRelations.objects.is_follow(my_username, username)
+            is_my_page = False
+        except:
+            return Response({}, status=status.HTTP_404_NOT_FOUND)
 
         if (my_username.username == username):
             is_my_page = True
@@ -30,6 +33,7 @@ class UserProfile(APIView):
             "login": user.username,
             "followers": user.num_followers,
             "following": user.num_following,
+            "posts": user.num_posts,
             "isFollow": is_follow.count() != 0,
             "isMyPage": is_my_page
         } 
@@ -50,8 +54,9 @@ class MyProfile(APIView):
             "login": user.username,
             "followers": user.num_followers,
             "following": user.num_following,
+            "posts": user.num_posts,
             "isFollow": False,
-            "isMyPage": True,
+            "isMyPage": True
         }
 
         return Response(data)
@@ -80,8 +85,7 @@ class UserSignup(APIView):
                 login(request, user)
                 return Response({}, status=status.HTTP_201_CREATED)
 
-        # Добавить текст ошибки serializer-а
-        return Response({}, status=status.HTTP_403_FORBIDDEN)
+        return Response(serializers.errors, status=status.HTTP_403_FORBIDDEN)
 
 class UserSignin(APIView):
     """
@@ -92,13 +96,18 @@ class UserSignin(APIView):
         username = request.data.get("username")
         password = request.data.get("password")
 
-        user = authenticate(username=username, password=password)
+        isUser = User.objects.filter(username=username).count() > 0
+        if (not isUser):
+            return Response({
+                "username": "User with this login doen't exists"
+            }, status=status.HTTP_401_UNAUTHORIZED)
 
+        user = authenticate(username=username, password=password)
         if user:
             login(request, user)
             return Response({}, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"password": "Incorrect password"}, status=status.HTTP_401_UNAUTHORIZED)
 
     def get(self, request):
         if (request.user.is_authenticated):
@@ -114,7 +123,6 @@ class UserRelation(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Вместе с ответом присылать новое количество follwers
         data = {
             "subscriber_id": request.user.id,
             "target_username": request.data.get("username")
@@ -129,7 +137,6 @@ class UserRelation(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
-        # Вместе с ответом присылать новое количество follwers
         data = {
             "subscriber_id": request.user.id,
             "target_username": request.data.get("username")
@@ -150,11 +157,6 @@ class Posts(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        print(request.data.get('text'))
-        # text = json.loads(request.data.get('text'))
-        # list_key_value = [ v for k, v in text.items() ]
-        # print(list_key_value)
-
         data = {
             "text": request.data.get("text"),
             "author_id": request.user.id
@@ -187,7 +189,11 @@ class Posts(APIView):
         if(username == None):
             posts = Post.objects.get_posts(request.user, start, end)
         else:
-            posts = Post.objects.get_my_posts(username, start, end)
+            posts = Post.objects.get_my_posts(username, start, end, request.user.username)
 
         return Response(posts, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        Post.objects.get(author__id=request.user.id, id=request.data.get("id")).delete()
+        return Response({}, status=status.HTTP_200_OK)
 

@@ -5,7 +5,10 @@ from datetime import datetime
 
 class UserManager(UserManager):
     def get_user_profile(self, username):
-        return self.all().annotate(num_followers=Count('target'), num_following=Count('subscriber')).get(username=username)
+        return self.all().annotate(num_followers=Count('target'), num_following=Count('subscriber'), num_posts=Count('post')).get(username=username)
+
+    def filter_user_profile(self, username):
+        return self.all().annotate(num_followers=Count('target'), num_following=Count('subscriber'), num_posts=Count('post')).filter(username=username)
 
     def get_author_login_by_id(self, id):
         return self.all().get(id=id).username
@@ -13,7 +16,7 @@ class UserManager(UserManager):
     def create_user(self, username, email, password):
 
         if not username:
-            raise ValueError('User must have a login!')
+            raise ValueError('User must have a username!')
 
         user = self.model(
             username = username,
@@ -43,11 +46,12 @@ class UserRelations(models.Model):
         unique_together = (("subscriber", "target"))
 
 class PostManager(models.Manager):
-    def get_my_posts(self, user, start, end):
+    def get_my_posts(self, user, start, end, current_user):
         offset_posts = self.all().filter(author__username=user).order_by('-create_date')[start:end]
         data = []
         self.create_object_post(offset_posts, data, user)
-
+        self.is_my_post(data, current_user)
+        
         return data
 
     def get_posts(self, user, start, end):
@@ -64,6 +68,10 @@ class PostManager(models.Manager):
             post['author'] = User.objects.get_author_login_by_id(post['author_id'])
             del post['author_id']
             posts.append(post)
+
+    def is_my_post(self, posts, username):
+        for post in posts:
+            post['isMyPost'] = post['author'] == username
 
     def is_post_like(self, user, post_id):
         isLike = PostLike.objects.filter(user=user, post__id=post_id)
