@@ -5,7 +5,7 @@ from datetime import datetime
 
 class UserManager(UserManager):
     def get_user_profile(self, username):
-        return self.all().annotate(num_followers=Count('target'), num_following=Count('subscriber'), num_posts=Count('post')).get(username=username)
+        return self.all().annotate(num_followers=Count('target', distinct=True), num_following=Count('subscriber', distinct=True), num_posts=Count('post')).get(username=username)
 
     def filter_user_profile(self, username):
         return self.all().annotate(num_followers=Count('target'), num_following=Count('subscriber'), num_posts=Count('post')).filter(username=username)

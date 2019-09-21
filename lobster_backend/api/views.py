@@ -30,6 +30,7 @@ class UserProfile(APIView):
         if (my_username.username == username):
             is_my_page = True
 
+        print(user.num_followers)
         data = {
             "login": user.username,
             "followers": user.num_followers,
