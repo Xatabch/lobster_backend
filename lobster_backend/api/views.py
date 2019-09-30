@@ -190,11 +190,14 @@ class Posts(APIView):
         end = start + offset
 
         if(username == None):
-            posts = Post.objects.get_posts(request.user, start, end)
+            posts, is_next = Post.objects.get_posts(request.user, start, end)
         else:
-            posts = Post.objects.get_my_posts(username, start, end, request.user.username)
+            posts, is_next = Post.objects.get_my_posts(username, start, end, request.user.username)
 
-        return Response(posts, status=status.HTTP_200_OK)
+        return Response({
+            "posts": posts,
+            "isNext": is_next
+        }, status=status.HTTP_200_OK)
 
     def delete(self, request):
         Post.objects.get(author__id=request.user.id, id=request.data.get("id")).delete()

@@ -47,20 +47,35 @@ class UserRelations(models.Model):
 
 class PostManager(models.Manager):
     def get_my_posts(self, user, start, end, current_user):
-        offset_posts = self.all().filter(author__username=user).order_by('-create_date')[start:end]
+        posts = self.all().filter(author__username=user).order_by('-create_date')
+        try:
+            posts[end]
+            is_next = True
+        except:
+            is_next = False
+
+        offset_posts = posts[start:end]
         data = []
+
         self.create_object_post(offset_posts, data, user)
         self.is_my_post(data, current_user)
         
-        return data
+        return data, is_next
 
     def get_posts(self, user, start, end):
         targets = UserRelations.objects.filter(subscriber=user).values('target');
-        offset_posts = Post.objects.filter(author__in=targets).order_by('-create_date')[start:end]
+        posts = Post.objects.filter(author__in=targets).order_by('-create_date')
+        offset_posts = posts[start:end]
+        try:
+            posts[end]
+            is_next = True
+        except:
+            is_next = False
+
         data = []
         self.create_object_post(offset_posts, data, user)
 
-        return data
+        return data, is_next
 
     def create_object_post(self, post_q_s, posts, user):
         for post in post_q_s.values():
